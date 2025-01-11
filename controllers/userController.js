@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import express from 'express'
 import razorpay from 'razorpay'
 import transactionModel from "../models/transactionModel.js";
+import { SendVerificationCode, WelcomeEmail } from "../middlewares/Email.js";
 
 const app = express()
 app.use(express.json())
@@ -11,55 +12,114 @@ app.use(express.json())
 const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
+        
+        // Check if all required details are provided
         if (!name || !email || !password) {
-            return res.json({ sucess: false, message: 'Missing Details' })
+            return res.status(400).json({ success: false, message: 'Missing Details' });
         }
 
+        // Check if the user already exists
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'Email is already registered' });
+        }
+
+        // Hash password
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt)
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Generate a verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
         const userData = {
             name,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            verificationCode
         }
 
-        const newUser = new userModel(userData)
+        // Save new user to the database
+        const newUser = new userModel(userData);
         const user = await newUser.save();
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
+        // Send verification code to the user's email
+        SendVerificationCode(userData.email, verificationCode);
 
-        res.json({ sucess: true, token, user: { name: user.name } })
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        // Return success response
+        res.status(200).json({ success: true, token, user: { name: user.name, email: user.email } });
     } catch (err) {
-        console.log(err);
-        res.json({ sucess: false, message: err.message })
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-}
+};
+
+
+const verifyEmail = async (req, res) => {
+    try {
+        const code = req.body.otp;
+
+        // Find user by verification code
+        const user = await userModel.findOne({ verificationCode: code });
+        
+        // Handle invalid or expired code
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Invalid or Expired Code' });
+        }
+  
+        // Mark user as verified
+        user.isVerified = true;
+        user.verificationCode = undefined; // Clear verification code
+
+        // Save user updates
+        await user.save();
+
+        // Send welcome email
+        await WelcomeEmail(user.email, user.name);
+
+        // Return success response
+        res.status(200).json({ success: true, message: 'Email Verified Successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
 
 
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await userModel.findOne({ email })
 
+        // Check if user exists
+        const user = await userModel.findOne({ email });
         if (!user) {
-            return res.json({ sucess: false, message: 'User does not exist' })
+            return res.status(404).json({ success: false, message: 'User does not exist' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password)
-
-        if (isMatch) {
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-
-            res.json({ sucess: true, token, user: { name: user.name } })
-        } else {
-            return res.json({ sucess: false, message: 'Invalid credentials' })
+        // Check if user is verified
+        if (!user.isVerified) {
+            return res.status(400).json({ success: false, message: 'Email is not verified' });
         }
+
+        // Check if password matches
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        // Return success response
+        res.status(200).json({ success: true, token, user: { name: user.name, email: user.email } });
     } catch (err) {
-        console.log(err)
-        res.json({ sucess: false, message: err.message })
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-}
+};
+
 
 const userCredits = async (req, res) => {
     try {
@@ -194,4 +254,4 @@ const verifyRazorpay = async (req, res) => {
 
 
 
-export { registerUser, loginUser, userCredits, paymentRazorpay, verifyRazorpay }
+export { registerUser, verifyEmail, loginUser, userCredits, paymentRazorpay, verifyRazorpay }
