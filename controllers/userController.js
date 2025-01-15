@@ -152,7 +152,7 @@ const forgotPassword = async (req, res) => {
         });
 
         const receiver = {
-            from: "swayamsidgor@gmail.com",
+            from: "lexipix@gmail.com",
             to: email,
             subject: "Password Reset Request",
             text: `Click on this link to generate your new password: ${process.env.CLIENT_URL}/reset-password/${checkUser._id}/${token}`,
