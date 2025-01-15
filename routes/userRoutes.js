@@ -1,5 +1,5 @@
 import express from 'express'
-import {registerUser, loginUser, userCredits, paymentRazorpay, verifyRazorpay, verifyEmail } from '../controllers/userController.js'
+import {registerUser, loginUser, userCredits, paymentRazorpay, verifyRazorpay, verifyEmail, forgotPassword, resetPassword } from '../controllers/userController.js'
 import userAuth from '../middlewares/auth.js'
 
 const userRouter = express.Router()
@@ -10,6 +10,9 @@ userRouter.post('/login',loginUser)
 userRouter.get('/credits',userAuth,userCredits)
 userRouter.post('/pay-razor',userAuth,paymentRazorpay)
 userRouter.post('/verify-razor',verifyRazorpay)
+userRouter.post('/forgot-password',forgotPassword)
+userRouter.post('/reset-password/:id/:token', resetPassword);
+
 
 export default userRouter
 

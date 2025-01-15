@@ -5,6 +5,7 @@ import express from 'express'
 import razorpay from 'razorpay'
 import transactionModel from "../models/transactionModel.js";
 import { SendVerificationCode, WelcomeEmail } from "../middlewares/Email.js";
+import nodemailer from 'nodemailer'
 
 const app = express()
 app.use(express.json())
@@ -46,7 +47,7 @@ const registerUser = async (req, res) => {
         SendVerificationCode(userData.email, verificationCode);
 
         // Generate JWT token
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '5m' });
 
         // Return success response
         res.status(200).json({ success: true, token, user: { name: user.name, email: user.email } });
@@ -117,6 +118,90 @@ const loginUser = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+
+
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).send({ message: "Please provide Email" });
+        }
+
+        const checkUser = await userModel.findOne({ email });
+
+        if (!checkUser) {
+            return res.status(400).send({ message: "User not found! Please Register" });
+        }
+
+        // Create a token with the user's ID and email, using their password in the secret
+        const secret = process.env.JWT_SECRET + checkUser.password; // Make token user-specific
+        const token = jwt.sign({ email, id: checkUser._id }, secret, { expiresIn: "1h" });
+
+        // Prepare email transport
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            secure: true,
+            auth: {
+                user: process.env.USER_EMAIL,
+                pass: process.env.USER_PASSWORD,
+            },
+        });
+
+        const receiver = {
+            from: "swayamsidgor@gmail.com",
+            to: email,
+            subject: "Password Reset Request",
+            text: `Click on this link to generate your new password: ${process.env.CLIENT_URL}/reset-password/${checkUser._id}/${token}`,
+        };
+
+        await transporter.sendMail(receiver);
+
+        return res.status(200).send({ message: "Password reset link sent successfully to your email account" });
+    } catch (error) {
+        return res.status(500).send({ message: "Something went wrong!" });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { token, id } = req.params;
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).send({ message: "Please provide a new password" });
+        }
+
+        // Find the user by ID
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(400).send({ message: "Invalid user ID" });
+        }
+
+        // Use the user's password in the secret for token verification
+        const secret = process.env.JWT_SECRET + user.password;
+
+        // Verify the token with the user-specific secret
+        try {
+            jwt.verify(token, secret);
+        } catch (err) {
+            return res.status(400).send({ message: "Invalid or expired token" });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const newHashedPassword = await bcrypt.hash(password, salt);
+
+        // Update the user's password
+        user.password = newHashedPassword;
+        await user.save();
+
+        return res.status(200).send({ message: "Password reset successfully" });
+    } catch (error) {
+        return res.status(500).send({ message: "Something went wrong!" });
     }
 };
 
@@ -254,4 +339,4 @@ const verifyRazorpay = async (req, res) => {
 
 
 
-export { registerUser, verifyEmail, loginUser, userCredits, paymentRazorpay, verifyRazorpay }
+export { registerUser, verifyEmail, loginUser,forgotPassword, resetPassword, userCredits, paymentRazorpay, verifyRazorpay }
