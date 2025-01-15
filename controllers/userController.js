@@ -160,9 +160,9 @@ const forgotPassword = async (req, res) => {
 
         await transporter.sendMail(receiver);
 
-        return res.status(200).send({ message: "Password reset link sent successfully to your email account" });
+        return res.status(200).send({ success:true});
     } catch (error) {
-        return res.status(500).send({ message: "Something went wrong!" });
+        return res.status(500).send({ success:false});
     }
 };
 
@@ -199,9 +199,9 @@ const resetPassword = async (req, res) => {
         user.password = newHashedPassword;
         await user.save();
 
-        return res.status(200).send({ message: "Password reset successfully" });
+        return res.status(200).send({ success:true});
     } catch (error) {
-        return res.status(500).send({ message: "Something went wrong!" });
+        return res.status(500).send({ success:false});
     }
 };
 
@@ -215,7 +215,7 @@ const userCredits = async (req, res) => {
         res.json({ sucess: true, credits: user.creditBalance, user: { name: user.name } })
     } catch (err) {
         console.log(err)
-        res.json({ sucess: false, message: err.message })
+        res.json({ sucess: false})
     }
 }
 
