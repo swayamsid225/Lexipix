@@ -38,7 +38,7 @@ export const generateImage = async (req, res) => {
         })
     } catch (err) {
         console.log(err)
-        res.json({ sucess: false, message: err.message })
+        res.json({ sucess: false, message: "Let's keep it respectful. Feel free to ask about something else!"})
     }
 }
 
