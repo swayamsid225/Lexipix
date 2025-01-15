@@ -1,5 +1,5 @@
 import { Verification_Email_Template, Welcome_Email_Template } from "../utils/EmailTempletes.js";
-import { transporter } from "./EmailConfig.js";
+import { transporter } from "./emailConfig.js";
 
 
 
