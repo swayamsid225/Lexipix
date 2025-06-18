@@ -16,13 +16,13 @@ const registerUser = async (req, res) => {
         
         // Check if all required details are provided
         if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: 'Missing Details' });
+            return res.json({ success: false, message: 'Missing Details' }).status(400);
         }
 
         // Check if the user already exists
         const existingUser = await userModel.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ success: false, message: 'Email is already registered' });
+            return res.json({ success: false, message: 'Email is already registered' }).status(400);
         }
 
         // Hash password
@@ -53,7 +53,7 @@ const registerUser = async (req, res) => {
         res.status(200).json({ success: true, token, user: { name: user.name, email: user.email } });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+        res.json({ success: false, message: 'Internal Server Error' }).status(500);
     }
 };
 
@@ -67,7 +67,7 @@ const verifyEmail = async (req, res) => {
         
         // Handle invalid or expired code
         if (!user) {
-            return res.status(400).json({ success: false, message: 'Invalid or Expired Code' });
+            return res.json({ success: false, message: 'Invalid or Expired Code' }).status(400);
         }
   
         // Mark user as verified
@@ -81,10 +81,10 @@ const verifyEmail = async (req, res) => {
         await WelcomeEmail(user.email, user.name);
 
         // Return success response
-        res.status(200).json({ success: true, message: 'Email Verified Successfully' });
+        res.json({ success: true, message: 'Email Verified Successfully' }).status(200);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+        res.json({ success: false, message: 'Internal Server Error' }).status(500);
     }
 };
 
@@ -96,18 +96,18 @@ const loginUser = async (req, res) => {
         // Check if user exists
         const user = await userModel.findOne({ email });
         if (!user) {
-            return res.status(404).json({ success: false, message: 'User does not exist' });
+            return res.json({ success: false, message: 'User does not exist' }).status(404);
         }
 
         // Check if user is verified
         if (!user.isVerified) {
-            return res.status(400).json({ success: false, message: 'Email is not verified' });
+            return res.json({ success: false, message: 'Email is not verified' }).status(400);
         }
 
         // Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.json({ success: false, message: 'Invalid credentials' }).status(401);
         }
 
         // Generate JWT token
@@ -117,7 +117,7 @@ const loginUser = async (req, res) => {
         res.status(200).json({ success: true, token, user: { name: user.name, email: user.email } });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+        res.json({ success: false, message: 'Internal Server Error' }).status(500);
     }
 };
 
@@ -128,13 +128,13 @@ const forgotPassword = async (req, res) => {
         const { email } = req.body;
 
         if (!email) {
-            return res.status(400).send({ message: "Please provide Email" });
+            return res.send({ message: "Please provide Email" }).status(400);
         }
 
         const checkUser = await userModel.findOne({ email });
 
         if (!checkUser) {
-            return res.status(400).send({ message: "User not found! Please Register" });
+            return res.send({ message: "User not found! Please Register" }).status(400);
         }
 
         // Create a token with the user's ID and email, using their password in the secret
@@ -172,13 +172,13 @@ const resetPassword = async (req, res) => {
         const { password } = req.body;
 
         if (!password) {
-            return res.status(400).send({ message: "Please provide a new password" });
+            return res.send({ message: "Please provide a new password" }).status(400);
         }
 
         // Find the user by ID
         const user = await userModel.findById(id);
         if (!user) {
-            return res.status(400).send({ message: "Invalid user ID" });
+            return res.send({ message: "Invalid user ID" }).status(400);
         }
 
         // Use the user's password in the secret for token verification
@@ -188,7 +188,7 @@ const resetPassword = async (req, res) => {
         try {
             jwt.verify(token, secret);
         } catch (err) {
-            return res.status(400).send({ message: "Invalid or expired token" });
+            return res.send({ message: "Invalid or expired token" }).status(400);
         }
 
         // Hash the new password
@@ -281,7 +281,7 @@ const paymentRazorpay = async (req, res) => {
 
         // Creating options to create razorpay Order
         const options = {
-            amount: amount * 100,
+            amount: amount*100,
             currency: process.env.CURRENCY,
             receipt: newTransaction._id,
         }
@@ -336,6 +336,10 @@ const verifyRazorpay = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+
+
+
+export { registerUser, verifyEmail, loginUser,forgotPassword, resetPassword, userCredits, paymentRazorpay, verifyRazorpay }
 
 
 
