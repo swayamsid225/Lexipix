@@ -170,9 +170,9 @@ const userCredits = async (req, res) => {
   try {
     const userId = req.user?.id;
 
-    // if (!userId) {
-    //   return res.status(401).json({ success: false, message: "Unauthorized" });
-    // }
+    if (!userId) {
+      return res.json({ success: false, message: "Unauthorized" }).status(401);
+    }
 
     // 1. Check Redis cache
     const cached = await redisClient.get(`credits:${userId}`);
@@ -188,7 +188,7 @@ const userCredits = async (req, res) => {
     // 2. Fallback to MongoDB
     const user = await userModel.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.json({ success: false, message: "User not found" }).status(404);
     }
 
     // 3. Cache the credit and name
@@ -205,7 +205,7 @@ const userCredits = async (req, res) => {
     });
   } catch (err) {
     console.error("Credits Error:", err.message);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res.json({ success: false, message: "Internal Server Error" }).status(500);
   }
 };
 
