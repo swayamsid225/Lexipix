@@ -170,9 +170,9 @@ const userCredits = async (req, res) => {
   try {
     const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
+    // if (!userId) {
+    //   return res.status(401).json({ success: false, message: "Unauthorized" });
+    // }
 
     // 1. Check Redis cache
     const cached = await redisClient.get(`credits:${userId}`);
