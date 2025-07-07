@@ -7,7 +7,7 @@ const userAuth = async (req, res, next) => {
     const authHeader = req.headers.authorization || req.headers.token;
 
     if (!authHeader) {
-      return res.status(401).json({ success: false, message: 'Not Authorized. Token missing' });
+      return res.json({ success: false, message: 'Not Authorized. Token missing' }).status(401);
     }
 
     // Support both "Bearer token" and raw token formats
