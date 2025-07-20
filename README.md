@@ -1,23 +1,23 @@
-# 🖼️ LexiPix - AI-Powered Text-to-Image Generator
+# LexiPix - AI-Powered Text-to-Image Generator
 
 LexiPix is a full-stack web application that enables users to generate AI-powered images from text prompts, store their history, make secure payments, and receive email confirmations — all built with the **MERN stack**, integrated with **OpenAI**, **Cloudinary**, **Razorpay**, and **Gmail SMTP**.
 
 ---
 
-## 🚀 Features
+## Features
 
-- ✍️ Generate images from text using OpenAI
-- 💳 Pay for image credits using Razorpay & Stripe
-- 🧠 User authentication with Google OAuth and JWT
-- ☁️ Cloudinary image storage
-- 📬 Email confirmation after generation
-- 🕓 View image generation history
-- 🧾 Secure and scalable backend (Redis, PM2, MongoDB)
-- 📈 Rate-limiting, CORS, and environment-aware configs
+-  Generate images from text using OpenAI
+-  Pay for image credits using Razorpay & Stripe
+-  User authentication with Google OAuth and JWT
+-  Cloudinary image storage
+-  Email confirmation after generation
+-  View image generation history
+-  Secure and scalable backend (Redis, PM2, MongoDB)
+-  Rate-limiting, CORS, and environment-aware configs
 
 ---
 
-## 🧱 Tech Stack
+##  Tech Stack
 
 ### Frontend:
 - React
@@ -36,7 +36,7 @@ LexiPix is a full-stack web application that enables users to generate AI-powere
 
 ---
 
-## ⚙️ Installation & Setup
+##  Installation & Setup
 
 ### 1. Clone the Repository
 ```bash
